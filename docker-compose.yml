@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+  ###################################
+  # Cousul will be used to register service which other services and discover
+  # consul:
+  #   image: consul:latest
+  #   command: consul agent -dev -log-level=warn -ui -client=0.0.0.0
+  #   hostname: consul
+  #   ports:
+  #     - "8500:8500"
+
+  ###################################
+  # Micro web to view and query service from web dashboard
+  microweb:
+    image: microhq/micro:latest
+    command: web
+    ports:
+      - "80:8082"
+    environment:
+      - MICRO_REGISTRY=mdns
+      # - MICRO_REGISTRY_ADDRESS=consul
+    links:
+      - consignment
+      - vessel
+
+  lotus_db:
+    image: "postgres:9.6"
+    restart: always
+    environment:
+      POSTGRES_USER: lotus
+      POSTGRES_PASSWORD: lotus
+      POSTGRES_DB: lotus
+    container_name: lotus_db
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+
+  ###################################
+  # Our consignment service
+  consignment:
+    image: consignment-srv
+    ports:
+      - "8081:8080"
+    environment:
+      - MICRO_REGISTRY=mdns
+      - DB_HOST=lotus_db
+      - DB_PORT=5432
+      - DB_NAME=lotus
+      - DB_USER=lotus
+      - DB_PASS=lotus
+      - DB_SSL=disable
+    container_name: consignment
+      # - MICRO_REGISTRY_ADDRESS=consul
+    depends_on:
+      - lotus_db
+    links:
+      - lotus_db
+
+      ###################################
+  # Our vessel service
+  vessel:
+    image: vessel-srv
+    ports:
+      - "8082:8080"
+    environment:
+      - MICRO_REGISTRY=mdns
+      - DB_HOST=lotus_db
+      - DB_PORT=5432
+      - DB_NAME=lotus
+      - DB_USER=lotus
+      - DB_PASS=lotus
+      - DB_SSL=disable
+    container_name: vessel
+    depends_on:
+      - lotus_db
+    links:
+      - lotus_db
+

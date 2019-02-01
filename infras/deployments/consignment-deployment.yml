@@ -1,0 +1,41 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: consignment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consignment
+  template:
+    metadata:
+      labels:
+        app: consignment
+    spec:
+        containers:
+        - name: consignment-srv
+          image: gcr.io/impactful-yeti-230307/consignment-srv:latest
+          imagePullPolicy: Always
+          command: [
+            "./consignment-srv",
+            "--selector=static",
+            "--server_address=:8080",
+          ]
+          env:
+          - name: DB_HOST
+            value: "postgres"
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USER
+            value: "lotus"
+          - name: DB_NAME
+            value: "lotus"
+          - name: DB_PASS
+            value: "lotus"
+          - name: DB_SSL
+            value: "disable"
+          - name: UPDATED_AT
+            value: "Mon 19 Mar 2018 12:05:58 GMT"
+          ports:
+          - containerPort: 8080
+            name: consign-port
